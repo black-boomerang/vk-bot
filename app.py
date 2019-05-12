@@ -21,7 +21,3 @@ def processing():
         user_id = data['object']['user_id']
         api.messages.send(access_token=token, user_id=str(user_id), message=text)
         return 'ok'
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
