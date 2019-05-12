@@ -1,0 +1,6 @@
+gunicorn
+vk
+flask
+sqlalchemy
+python-dotenv
+gevent
