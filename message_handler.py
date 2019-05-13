@@ -115,6 +115,9 @@ def message_handler(data):
     message_array = message.split()
 
     if message_array[0] == 'help':  # получение справки
+        if new_user_flg is True:
+            db_session.delete(user)
+            db_session.commit()
         text = get_help_text()
         return text
     elif message_array[0] == 'admin':  # пользователь хочет получить админские права
