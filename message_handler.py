@@ -71,8 +71,18 @@ def insert_new_request(db_session, user_id, schedule_dt):
     db_session.commit()
 
 
+# проверка, ввёл пользователь ВУЗ или факультет или нет
+def is_name(message):
+    return (message.isupper()) and (len(message) <= 15)
+
+
+# проверка, ввёл пользователь ВУЗ или факультет или нет
+def is_group(message):
+    return (re.search(r'\d', message) is not None) and (len(message) <= 15)
+
+
 # обработка самого запроса
-def request_hendler(db_session, user, message):
+def request_handler(db_session, user, message):
     message = message.strip()
 
     # не зависмо от запроса сообщение должно содержать дату
@@ -85,7 +95,7 @@ def request_hendler(db_session, user, message):
     schedule_dt = datetime.datetime.strptime(schedule_dt, "%d.%m.%Y").date()
 
     getting_flg = message_array[0].strip().lower() == 'покажи расписание на'
-    changing_flg = (message_array[0].strip().lower() == 'измени расписание на') and (user.admin_flg is True)
+    changing_flg = (message_array[0].strip().lower() == 'измени расписание на') and (user.is_admin is True)
 
     # пользователь не запрашивает и не пытается изменить расписание
     if getting_flg is False and changing_flg is False:
@@ -108,7 +118,8 @@ def request_hendler(db_session, user, message):
 def message_handler(data):
     db_session = DB_Session()
     user_id = data['object']['user_id']
-    message = data['object']['body'].strip().lower()
+    original_message = data['object']['body']
+    message = original_message.strip().lower()
 
     user, new_user_flg = get_user(db_session, user_id)
 
@@ -122,12 +133,11 @@ def message_handler(data):
         return text
     elif message_array[0] == 'admin':  # пользователь хочет получить админские права
         if message_array[1] == admin_key:
-            user.admin_flg = True
+            user.is_admin = True
             db_session.add(user)
             db_session.commit()
             return 'Права админа успешно подтверждены'
-        else:
-            return 'Неверный ключ'
+        return 'Неверный ключ'
     elif message_array[0] == 'delete':  # пользователь хочет удалиться из базы
         db_session.delete(user)
         db_session.commit()
@@ -142,18 +152,24 @@ def message_handler(data):
                   'group_nm': group.group_nm}
 
     if group.university_nm is None:  # пользователь в сообщении указал ВУЗ
-        group_info['university_nm'] = message
-        info_insertion(db_session, group_info, user)
-        return 'Введи название факультета'
+        if is_name(original_message):
+            group_info['university_nm'] = message
+            info_insertion(db_session, group_info, user)
+            return 'Введи название факультета'
+        return 'Запрос некорректен'
 
     if group.faculty_nm is None:  # пользователь в сообщении указал факультет
-        group_info['faculty_nm'] = message
-        info_insertion(db_session, group_info, user)
-        return 'Введи название(номер) группы'
+        if is_name(original_message):
+            group_info['faculty_nm'] = message
+            info_insertion(db_session, group_info, user)
+            return 'Введи название(номер) группы'
+        return 'Запрос некорректен'
 
     if group.group_nm is None:  # пользователь в сообщении указал группу
-        group_info['group_nm'] = message
-        info_insertion(db_session, group_info, user)
-        return 'Информация добавлена в базу'
+        if is_group(original_message):
+            group_info['group_nm'] = message
+            info_insertion(db_session, group_info, user)
+            return 'Информация добавлена в базу'
+        return 'Запрос некорректен'
 
-    return request_hendler(db_session, user, data['object']['body'])
+    return request_handler(db_session, user, original_message)

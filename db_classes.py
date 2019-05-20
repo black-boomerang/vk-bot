@@ -6,11 +6,11 @@ class User(Base):
     __tablename__ = 'user'
 
     user_id = Column(Integer, primary_key=True)
-    group_id = Column(Integer, ForeignKey('group.group_id', ondelete='CASCADE'), default=1)
-    admin_flg = Column(Boolean, default=False)
+    group_id = Column(Integer, ForeignKey('group.group_id'), default=1)
+    is_admin = Column(Boolean, default=False)
 
     def __repr__(self):
-        return "<User(user_id={}, group_id={}, admin_flg={})>".format(self.user_id, self.group_id, self.admin_flg)
+        return "<User(user_id={}, group_id={}, admin_flg={})>".format(self.user_id, self.group_id, self.is_admin)
 
 
 class Group(Base):
