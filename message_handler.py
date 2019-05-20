@@ -71,7 +71,7 @@ def insert_new_request(db_session, user_id, schedule_dt):
     db_session.commit()
 
 
-# проверка, ввёл пользователь ВУЗ или факультет или нет
+# проверка, ввёл пользователь ВУЗ (факультет) или нет
 def is_name(message):
     return (message.isupper()) and (len(message) <= 15)
 
